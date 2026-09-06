@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-python.flake8",
+    "bradlc.vscode-tailwindcss"
+  ]
+}
