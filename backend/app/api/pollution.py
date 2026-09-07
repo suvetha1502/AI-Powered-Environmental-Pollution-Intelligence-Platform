@@ -5,12 +5,13 @@ from app.services.index_engine import (
     compute_MI, classify_risk
 )
 from app.services.preprocessor import validate_schema
+from app.data_loader import load_real_pollution_records
 import pandas as pd
 import io
 
 router = APIRouter()
 
-_records: list = []
+_records: list = load_real_pollution_records()
 _processed_data: list = []
 
 @router.post("/ingest")
@@ -20,9 +21,10 @@ def ingest_pollution(record: PollutionRecord):
 
 @router.get("/records")
 def get_records(pollution_type: str = None):
+    records = load_real_pollution_records()
     if pollution_type:
-        return [r for r in _records if r["pollution_type"] == pollution_type]
-    return _records
+        return [r for r in records if r["pollution_type"] == pollution_type]
+    return records
 
 @router.post("/compute-indices")
 def compute_indices(record: HeavyMetalRecord):
