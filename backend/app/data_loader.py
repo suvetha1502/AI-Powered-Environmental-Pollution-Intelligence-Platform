@@ -5,8 +5,20 @@ from typing import Any
 
 import pandas as pd
 
+from app.services.preprocessor import clean_dataframe, normalize
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
+
+
+def _prepare_dataframe(df: pd.DataFrame, numeric_columns: list[str] | None = None) -> pd.DataFrame:
+    if df.empty:
+        return df
+    cleaned = clean_dataframe(df.copy())
+    columns_to_normalize = [col for col in (numeric_columns or []) if col in cleaned.columns]
+    if columns_to_normalize:
+        cleaned = normalize(cleaned, columns_to_normalize)
+    return cleaned
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -39,7 +51,10 @@ def load_real_pollution_records() -> list[dict]:
     records: list[dict] = []
 
     try:
-        aqi_df = pd.read_csv(get_dataset_file("AQI.csv"))
+        aqi_df = _prepare_dataframe(
+            pd.read_csv(get_dataset_file("AQI.csv")),
+            ["pollutant_avg", "pollutant_min", "pollutant_max", "latitude", "longitude"],
+        )
         for index, row in aqi_df.head(50).iterrows():
             pollutant = str(row.get("pollutant_id", "AQI")).strip()
             avg_value = _safe_float(row.get("pollutant_avg"), 0.0)
@@ -67,7 +82,10 @@ def load_real_pollution_records() -> list[dict]:
         pass
 
     try:
-        water_df = pd.read_csv(get_dataset_file("ground_water_quality_2020_post.csv"))
+        water_df = _prepare_dataframe(
+            pd.read_csv(get_dataset_file("ground_water_quality_2020_post.csv")),
+            ["pH", "TDS", "E.C", "Cl", "F", "NO3 ", "lat_gis", "long_gis"],
+        )
         for index, row in water_df.head(50).iterrows():
             records.append(
                 {
@@ -94,7 +112,10 @@ def load_real_pollution_records() -> list[dict]:
         pass
 
     try:
-        soil_df = pd.read_csv(get_dataset_file("soil_heavy_metal_dataset.csv"))
+        soil_df = _prepare_dataframe(
+            pd.read_csv(get_dataset_file("soil_heavy_metal_dataset.csv")),
+            ["As", "Pb", "Cd", "Ni", "Cr", "Hg", "Latitude", "Longitude"],
+        )
         for index, row in soil_df.head(50).iterrows():
             metals = {
                 "As": _safe_float(row.get("As")),

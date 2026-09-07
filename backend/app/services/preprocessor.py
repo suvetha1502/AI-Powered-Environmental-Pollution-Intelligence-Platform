@@ -10,10 +10,14 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 def normalize(df: pd.DataFrame, cols: list) -> pd.DataFrame:
     for col in cols:
-        if col in df.columns:
-            min_v, max_v = df[col].min(), df[col].max()
-            if max_v != min_v:
-                df[col] = (df[col] - min_v) / (max_v - min_v)
+        if col not in df.columns:
+            continue
+        series = pd.to_numeric(df[col], errors='coerce')
+        if series.dropna().empty:
+            continue
+        min_v, max_v = series.min(), series.max()
+        if pd.notna(min_v) and pd.notna(max_v) and max_v != min_v:
+            df[col] = (series - min_v) / (max_v - min_v)
     return df
 
 def validate_schema(data: dict, required_keys: list) -> tuple[bool, list]:
